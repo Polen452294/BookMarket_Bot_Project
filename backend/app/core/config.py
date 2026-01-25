@@ -1,0 +1,20 @@
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    database_url: str = Field(validation_alias="DATABASE_URL")
+
+    # JWT
+    jwt_secret: str = Field(default="dev-secret-change-me", validation_alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALG")
+    jwt_exp_minutes: int = Field(default=60 * 24, validation_alias="JWT_EXP_MIN")
+
+    # Admin credentials (для MVP — позже можно вынести в таблицу админов)
+    admin_username: str = Field(default="admin", validation_alias="ADMIN_USER")
+    admin_password: str = Field(default="admin", validation_alias="ADMIN_PASS")
+
+
+settings = Settings()
