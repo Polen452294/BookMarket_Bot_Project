@@ -16,5 +16,9 @@ class Settings(BaseSettings):
     admin_username: str = Field(default="admin", validation_alias="ADMIN_USER")
     admin_password: str = Field(default="admin", validation_alias="ADMIN_PASS")
 
+        # Media storage (локально)
+    media_dir: str = Field(default="/code/storage", validation_alias="MEDIA_DIR")
+    public_base_url: str = Field(default="http://localhost:8000", validation_alias="PUBLIC_BASE_URL")
+
 
 settings = Settings()
