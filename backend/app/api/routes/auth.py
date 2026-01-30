@@ -1,17 +1,39 @@
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from jose import jwt, JWTError
 
 from app.core.config import settings
-from app.core.security import create_access_token
-from app.schemas.auth import LoginIn, TokenOut
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["admin-auth"])
 
+ALGO = "HS256"
 
-@router.post("/login", response_model=TokenOut)
-def login(payload: LoginIn):
-    # MVP: логин/пароль берём из env (потом можно вынести в таблицу)
-    if payload.username != settings.admin_username or payload.password != settings.admin_password:
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+class LoginOut(BaseModel):
+    token: str
+    token_type: str = "bearer"
+
+@router.post("/admin/auth/login", response_model=LoginOut)
+def admin_login(payload: LoginIn):
+    if payload.username != settings.ADMIN_USERNAME or payload.password != settings.ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token(subject=payload.username)
-    return TokenOut(access_token=token)
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(minutes=settings.ADMIN_JWT_EXPIRES_MINUTES)
+
+    token = jwt.encode(
+        {"sub": payload.username, "exp": exp},
+        settings.ADMIN_JWT_SECRET,
+        algorithm=ALGO,
+    )
+    return LoginOut(token=token)
+
+def verify_admin_jwt(token: str) -> dict:
+    try:
+        return jwt.decode(token, settings.ADMIN_JWT_SECRET, algorithms=[ALGO])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")

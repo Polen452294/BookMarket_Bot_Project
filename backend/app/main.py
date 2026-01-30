@@ -13,11 +13,12 @@ from app.api.routes.media import router as media_router
 from app.api.routes.public_pages import router as public_pages_router
 from app.api.routes.bots import router as bots_router
 from app.api.routes.broadcasts import router as broadcasts_router
+from app.api.routes.auth import router as auth_router
 
 app = FastAPI(title="Bot Platform API")
 
 app.include_router(orders_router)
-
+app.include_router(auth_router)
 # Media static
 ensure_media_dir()
 app.mount("/media", StaticFiles(directory="storage"), name="media")

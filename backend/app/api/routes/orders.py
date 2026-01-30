@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone, timedelta
-from typing import Optional
 
-from fastapi import Request
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from app.core.config import settings
+from app.api.deps_admin_auth import require_admin_jwt
 from app.core.db import get_db
 from app.api.deps_bot_admin import bot_admin_guard
 
@@ -38,17 +36,6 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _require_web_admin_token(
-    x_bot_admin_token: str | None,
-    request: Request | None = None,
-    ):
-    if request and request.method == "OPTIONS":
-        return
-
-    if not x_bot_admin_token or x_bot_admin_token != settings.BOT_ADMIN_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid bot admin token")
-
-
 def _parse_json_param(value: str, default):
     try:
         return json.loads(value)
@@ -57,7 +44,6 @@ def _parse_json_param(value: str, default):
 
 
 def _apply_order_filters(q, flt: dict):
-    # Минимально нужный фильтр для React Admin: status
     status = flt.get("status")
     if status:
         q = q.where(Order.status == status)
@@ -65,7 +51,6 @@ def _apply_order_filters(q, flt: dict):
 
 
 def _content_range(resource: str, start: int, end: int, total: int) -> str:
-    # react-admin ожидает: "orders 0-9/123"
     if total <= 0:
         return f"{resource} 0-0/0"
     end = min(end, total - 1)
@@ -83,7 +68,6 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(404, "User not found (call /bot/users/upsert first)")
 
-    # запрет второй заявки, если есть открытая
     open_order = db.scalar(
         select(Order).where(
             Order.user_id == user.id,
@@ -243,27 +227,18 @@ def cleanup_orders(
 
 
 # ---------------------------
-# Web admin endpoints (React-Admin)
+# Web admin endpoints (React-Admin) — JWT ONLY
 # ---------------------------
 
 @router.get("/admin/orders", response_model=list[OrderOut])
 def web_admin_orders(
     response: Response,
+    _admin=Depends(require_admin_jwt),
     range: str = Query(default='[0,9]'),
     sort: str = Query(default='["id","DESC"]'),
     filter: str = Query(default='{}'),
-    x_bot_admin_token: Optional[str] = Header(default=None, alias="X-Bot-Admin-Token"),
     db: Session = Depends(get_db),
 ):
-    """
-    React-Admin LIST:
-      GET /admin/orders?range=[0,9]&sort=["id","DESC"]&filter={}
-    Must return:
-      - JSON array
-      - Content-Range header
-    """
-    #_require_web_admin_token(x_bot_admin_token)
-
     r0, r1 = _parse_json_param(range, [0, 9])
     sort_field, sort_dir = _parse_json_param(sort, ["id", "DESC"])
     flt = _parse_json_param(filter, {})
@@ -273,25 +248,19 @@ def web_admin_orders(
     limit = max(1, (r1 - r0) + 1)
     offset = max(0, r0)
 
-    # base query
     q = select(Order)
     q = _apply_order_filters(q, flt)
 
-    # total count for Content-Range
-    # IMPORTANT: считаем по subquery, чтобы работало с where
     total = db.execute(select(func.count()).select_from(q.subquery())).scalar_one()
 
-    # sorting
     col = getattr(Order, str(sort_field), None) or Order.id
     if str(sort_dir).upper() == "ASC":
         q = q.order_by(col.asc())
     else:
         q = q.order_by(col.desc())
 
-    # pagination
     items = db.execute(q.offset(offset).limit(limit)).scalars().all()
 
-    # Content-Range
     end = offset + len(items) - 1
     response.headers["Content-Range"] = _content_range("orders", offset, end, total)
 
@@ -301,11 +270,9 @@ def web_admin_orders(
 @router.get("/admin/orders/{order_id}", response_model=OrderOut)
 def web_admin_order(
     order_id: int,
-    x_bot_admin_token: Optional[str] = Header(default=None, alias="X-Bot-Admin-Token"),
+    _admin=Depends(require_admin_jwt),
     db: Session = Depends(get_db),
 ):
-    _require_web_admin_token(x_bot_admin_token)
-
     o = db.get(Order, order_id)
     if not o:
         raise HTTPException(404, "Order not found")
@@ -316,16 +283,9 @@ def web_admin_order(
 def web_admin_update_order(
     order_id: int,
     payload: dict,
-    x_bot_admin_token: Optional[str] = Header(default=None, alias="X-Bot-Admin-Token"),
+    _admin=Depends(require_admin_jwt),
     db: Session = Depends(get_db),
 ):
-    """
-    React-Admin UPDATE:
-      PATCH /admin/orders/{id}
-      body: {"status":"in_progress"} or {"comment":"..."}
-    """
-    _require_web_admin_token(x_bot_admin_token)
-
     o = db.get(Order, order_id)
     if not o:
         raise HTTPException(404, "Order not found")
@@ -344,14 +304,13 @@ def web_admin_update_order(
     db.refresh(o)
     return o
 
+
 @router.delete("/admin/orders/{order_id}")
 def web_admin_delete_order(
     order_id: int,
-    x_bot_admin_token: Optional[str] = Header(default=None, alias="X-Bot-Admin-Token"),
+    _admin=Depends(require_admin_jwt),
     db: Session = Depends(get_db),
 ):
-    _require_web_admin_token(x_bot_admin_token)
-
     o = db.get(Order, order_id)
     if not o:
         raise HTTPException(404, "Order not found")
@@ -368,9 +327,11 @@ def web_admin_delete_order(
 
     return {"id": order_id}
 
+
 @router.options("/admin/orders")
 def options_admin_orders():
     return Response(status_code=200)
+
 
 @router.options("/admin/orders/{order_id}")
 def options_admin_order(order_id: int):

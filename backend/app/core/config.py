@@ -1,33 +1,38 @@
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-    database_url: str = Field(validation_alias="DATABASE_URL")
-    
-    bot_admin_token: str = Field(default="dev-bot-admin-token", validation_alias="BOT_ADMIN_TOKEN")
-
-    # JWT
-    jwt_secret: str = Field(default="dev-secret-change-me", validation_alias="JWT_SECRET")
-    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALG")
-    jwt_exp_minutes: int = Field(default=60 * 24, validation_alias="JWT_EXP_MIN")
-
-    # Admin credentials (для MVP — позже можно вынести в таблицу админов)
-    admin_username: str = Field(default="admin", validation_alias="ADMIN_USER")
-    admin_password: str = Field(default="admin", validation_alias="ADMIN_PASS")
-
-        # Media storage (локально)
-    media_dir: str = Field(default="/code/storage", validation_alias="MEDIA_DIR")
-    public_base_url: str = Field(default="http://localhost:8000", validation_alias="PUBLIC_BASE_URL")
+    # ---- DB ----
     DATABASE_URL: str
-    BOT_ADMIN_TOKEN: str = "dev-bot-admin-token"
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # ---- storage/media ----
+    MEDIA_DIR: str = "media"
 
+    # ---- web admin auth ----
+    ADMIN_USERNAME: str
+    ADMIN_PASSWORD: str
+    ADMIN_JWT_SECRET: str
+    ADMIN_JWT_EXPIRES_MINUTES: int = 1440
+
+    BOT_ADMIN_TOKEN: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+    @property
+    def bot_admin_token(self) -> str:
+        return self.BOT_ADMIN_TOKEN
+    
     @property
     def database_url(self) -> str:
         return self.DATABASE_URL
+
+    @property
+    def media_dir(self) -> str:
+        # код в storage.py читает settings.media_dir
+        return self.MEDIA_DIR
+
 
 settings = Settings()

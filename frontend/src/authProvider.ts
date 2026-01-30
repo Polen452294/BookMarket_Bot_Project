@@ -1,25 +1,44 @@
-import type { AuthProvider } from "react-admin";
+import { AuthProvider } from "react-admin";
 
-const KEY = "admin_token";
+const API = "http://localhost:8000";
 
 export const authProvider: AuthProvider = {
-  login: async (params) => {
-    // React Admin по умолчанию передаёт username/password.
-    // Мы используем "password" как token.
-    const token = (params.password || "").trim();
-    if (!token) throw new Error("Token required");
-    localStorage.setItem(KEY, token);
-  },
-  logout: async () => {
-    localStorage.removeItem(KEY);
-  },
-  checkAuth: async () => {
-    const t = localStorage.getItem(KEY);
-    if (!t) throw new Error("Not authenticated");
-  },
-  checkError: async () => {},
-  getPermissions: async () => [],
-  getIdentity: async () => ({ id: "admin", fullName: "Admin" }),
-};
+  login: async ({ username, password }) => {
+    const res = await fetch(`${API}/admin/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
-export const getToken = () => localStorage.getItem(KEY) || "";
+    if (!res.ok) {
+      throw new Error("Invalid credentials");
+    }
+
+    const data = await res.json();
+    // backend должен вернуть { token: "..." }
+    localStorage.setItem("admin_jwt", data.token);
+  },
+
+  logout: async () => {
+    localStorage.removeItem("admin_jwt");
+  },
+
+  checkAuth: async () => {
+    const token = localStorage.getItem("admin_jwt");
+    if (!token) throw new Error("Not authenticated");
+  },
+
+  checkError: async (error: any) => {
+    const status = error?.status || error?.statusCode;
+    if (status === 401 || status === 403) {
+      localStorage.removeItem("admin_jwt");
+      throw new Error("Unauthorized");
+    }
+  },
+
+  getIdentity: async () => {
+    return { id: "admin", fullName: "Admin" };
+  },
+
+  getPermissions: async () => [],
+};
