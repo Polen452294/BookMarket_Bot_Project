@@ -61,6 +61,46 @@ def admin_order_kb(order_id: int):
             ],
             [
                 InlineKeyboardButton(text="❌ Отклонить", callback_data=f"order:rejected:{order_id}"),
+                InlineKeyboardButton(text="💬 Комментарий", callback_data=f"order_comment:{order_id}"),
             ],
+        ]
+    )
+
+def main_menu():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Оставить заявку", callback_data="order_new")],
+            [InlineKeyboardButton(text="🗂 Мои заявки", callback_data="my_orders")],
+            [InlineKeyboardButton(text="📦 Каталог", callback_data="catalog")],
+            [InlineKeyboardButton(text="ℹ️ О проекте", callback_data="about")],
+        ]
+    )
+
+def back_to_menu_kb():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⬅️ В меню", callback_data="menu")]
+        ]
+    )
+
+def reject_reasons_kb(order_id: int):
+    reasons = [
+        ("Не по теме", "not_topic"),
+        ("Нет мест/времени", "no_slots"),
+        ("Нужны детали", "need_details"),
+        ("Не работаем с таким", "no_service"),
+        ("Другое", "other"),
+    ]
+    rows = []
+    for title, code in reasons:
+        rows.append([InlineKeyboardButton(text=title, callback_data=f"reject:{order_id}:{code}")])
+    rows.append([InlineKeyboardButton(text="⬅️ Назад", callback_data=f"reject_back:{order_id}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def my_order_kb(order_id: int):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔍 Подробнее", callback_data=f"order_view:{order_id}")],
+            [InlineKeyboardButton(text="⬅️ В меню", callback_data="menu")],
         ]
     )

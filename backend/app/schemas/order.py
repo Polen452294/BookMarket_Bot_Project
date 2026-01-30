@@ -12,8 +12,9 @@ class OrderOut(BaseModel):
     id: int
     user_id: int
     text: str
-    phone: str | None = None
+    phone: str | None
     status: str
+    comment: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -22,4 +23,12 @@ class OrderOut(BaseModel):
 
 
 class OrderStatusUpdate(BaseModel):
-    status: str  # new|in_progress|closed|rejected
+    status: str
+
+class OrderNotifyInfo(BaseModel):
+    id: int
+    tg_id: int
+    status: str
+
+class OrderCommentUpdate(BaseModel):
+    comment: str
