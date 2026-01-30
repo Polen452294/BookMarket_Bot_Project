@@ -21,6 +21,13 @@ class Settings(BaseSettings):
         # Media storage (локально)
     media_dir: str = Field(default="/code/storage", validation_alias="MEDIA_DIR")
     public_base_url: str = Field(default="http://localhost:8000", validation_alias="PUBLIC_BASE_URL")
+    DATABASE_URL: str
+    BOT_ADMIN_TOKEN: str = "dev-bot-admin-token"
 
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def database_url(self) -> str:
+        return self.DATABASE_URL
 
 settings = Settings()

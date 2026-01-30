@@ -25,7 +25,7 @@ async def stats_cmd(message: Message):
         f"❌ Отклонённые: {o['rejected']}"
     )
 
-@router.message(lambda m: m.text.startswith("/cleanup"))
+@router.message(lambda m: m.text and m.text.startswith("/cleanup"))
 async def cleanup_cmd(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return

@@ -4,9 +4,11 @@ import json
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+from fastapi import Request
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.db import get_db
@@ -36,8 +38,13 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _require_web_admin_token(x_bot_admin_token: str | None) -> None:
-    # React-Admin шлёт заголовок X-Bot-Admin-Token
+def _require_web_admin_token(
+    x_bot_admin_token: str | None,
+    request: Request | None = None,
+    ):
+    if request and request.method == "OPTIONS":
+        return
+
     if not x_bot_admin_token or x_bot_admin_token != settings.BOT_ADMIN_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid bot admin token")
 
@@ -336,3 +343,35 @@ def web_admin_update_order(
     db.commit()
     db.refresh(o)
     return o
+
+@router.delete("/admin/orders/{order_id}")
+def web_admin_delete_order(
+    order_id: int,
+    x_bot_admin_token: Optional[str] = Header(default=None, alias="X-Bot-Admin-Token"),
+    db: Session = Depends(get_db),
+):
+    _require_web_admin_token(x_bot_admin_token)
+
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(404, "Order not found")
+
+    try:
+        db.delete(o)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete order: it has related data (use status=closed/rejected instead)",
+        )
+
+    return {"id": order_id}
+
+@router.options("/admin/orders")
+def options_admin_orders():
+    return Response(status_code=200)
+
+@router.options("/admin/orders/{order_id}")
+def options_admin_order(order_id: int):
+    return Response(status_code=200)
