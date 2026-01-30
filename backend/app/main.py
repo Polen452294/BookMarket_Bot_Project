@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.core.storage import ensure_media_dir
-
+from app.api.routes.orders import router as orders_router
 from app.api.routes.health import router as health_router
 from app.api.routes.products import router as products_router
 from app.api.routes.auth import router as auth_router
@@ -14,6 +14,8 @@ from app.api.routes.bots import router as bots_router
 from app.api.routes.broadcasts import router as broadcasts_router
 
 app = FastAPI(title="Bot Platform API")
+
+app.include_router(orders_router)
 
 # Media static
 ensure_media_dir()

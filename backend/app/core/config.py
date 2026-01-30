@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = Field(validation_alias="DATABASE_URL")
+    
+    bot_admin_token: str = Field(default="dev-bot-admin-token", validation_alias="BOT_ADMIN_TOKEN")
 
     # JWT
     jwt_secret: str = Field(default="dev-secret-change-me", validation_alias="JWT_SECRET")
