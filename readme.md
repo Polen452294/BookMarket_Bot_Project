@@ -69,6 +69,7 @@ Telegram-бот для книжного магазина с полноценно
 <p align="center">
     <img src="\docs\screenshots\Telegram_Oy6tKJLr6E.png" width="30%">
     <img src="docs/screenshots/image_2026-01-30_20-24-58.png" />
+    <img src="\docs\screenshots\image_2026-01-30_22-00-29.png">
     <img src="docs/screenshots/image_2026-01-31_21-03-09.png" />
 </p>>
 
