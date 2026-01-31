@@ -38,9 +38,9 @@ Telegram-бот для книжного магазина с полноценно
 Пользователь просматривает каталог книг прямо в Telegram с удобной навигацией и кнопками.
 
 <p align="center">
-  <img src="\docks\screenshots\image_2026-01-31_20-52-43.png" width="30%">
-  <img src="\docks\screenshots\image_2026-01-31_20-52-56.png" width="30%">
-  <img src="\docks\screenshots\image_2026-01-31_20-53-10.png" width="30%">
+  <img src="\docs\screenshots\image_2026-01-31_20-52-43.png" width="30%">
+  <img src="\docs\screenshots\image_2026-01-31_20-52-56.png" width="30%">
+  <img src="\docs\screenshots\image_2026-01-31_20-53-10.png" width="30%">
 </p>
 
 ---
