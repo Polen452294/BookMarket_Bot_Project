@@ -12,7 +12,6 @@ from app.api.deps import get_current_admin
 router = APIRouter(tags=["users"])
 
 
-# --- Для бота: создать/обновить пользователя (НЕ защищаем JWT, т.к. будет вызываться ботом)
 @router.post("/bot/users/upsert", response_model=UserOut)
 def bot_upsert_user(payload: UserUpsert, db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
@@ -31,7 +30,6 @@ def bot_upsert_user(payload: UserUpsert, db: Session = Depends(get_db)):
         )
         db.add(user)
     else:
-        # обновляем только то, что пришло (и last_seen)
         if payload.username is not None:
             user.username = payload.username
         if payload.first_name is not None:
@@ -47,7 +45,6 @@ def bot_upsert_user(payload: UserUpsert, db: Session = Depends(get_db)):
     return user
 
 
-# --- Для админки: список пользователей (защищено JWT)
 @router.get("/admin/users", response_model=list[UserOut], dependencies=[Depends(get_current_admin)])
 def admin_list_users(db: Session = Depends(get_db)):
     return db.scalars(select(User).order_by(User.id.desc())).all()

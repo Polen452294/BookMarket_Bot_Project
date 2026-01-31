@@ -14,12 +14,10 @@ def ensure_media_dir() -> Path:
 
 
 def safe_filename(original: str) -> str:
-    # очень простой вариант: убираем директории и добавляем случайный префикс
     base = os.path.basename(original).replace(" ", "_")
     prefix = secrets.token_hex(8)
     return f"{prefix}_{base}"
 
 
 def build_public_url(rel_path: str) -> str:
-    # rel_path например: /media/xxx.mp4
     return settings.public_base_url.rstrip("/") + rel_path

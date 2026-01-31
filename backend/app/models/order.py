@@ -15,7 +15,6 @@ class Order(Base):
     text: Mapped[str] = mapped_column(String(4096), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-    # new | in_progress | closed | rejected
     comment: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
     status: Mapped[str] = mapped_column(String(16), default="new", nullable=False)

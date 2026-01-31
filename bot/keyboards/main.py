@@ -1,23 +1,27 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
-def main_menu():
+def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="📦 Каталог", callback_data="catalog")],
+            [InlineKeyboardButton(text="📚 Каталог", callback_data="catalog")],
             [InlineKeyboardButton(text="ℹ️ О проекте", callback_data="about")],
         ]
     )
 
 
-def products_kb(products: list[dict]):
+def products_kb(products: list[dict], with_back: bool = False) -> InlineKeyboardMarkup:
     buttons = []
     for p in products:
         buttons.append([
             InlineKeyboardButton(
                 text=p["title"],
-                callback_data=f"product:{p['id']}",
+                callback_data=f"product:{p['id']}"
             )
         ])
+
+    if with_back:
+        buttons.append([InlineKeyboardButton(text="⬅️ В главное меню", callback_data="menu")])
+
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -102,5 +106,12 @@ def my_order_kb(order_id: int):
         inline_keyboard=[
             [InlineKeyboardButton(text="🔍 Подробнее", callback_data=f"order_view:{order_id}")],
             [InlineKeyboardButton(text="⬅️ В меню", callback_data="menu")],
+        ]
+    )
+
+def back_to_menu_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⬅️ В главное меню", callback_data="menu")]
         ]
     )

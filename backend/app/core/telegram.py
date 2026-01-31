@@ -13,7 +13,6 @@ async def tg_send_message(token: str, chat_id: int, text: str) -> None:
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     async with httpx.AsyncClient(timeout=15.0) as client:
         r = await client.post(url, json={"chat_id": chat_id, "text": text})
-        # Telegram иногда возвращает 200 с ok=false, поэтому парсим
         data = r.json()
         if not data.get("ok"):
             desc = data.get("description", "Telegram error")

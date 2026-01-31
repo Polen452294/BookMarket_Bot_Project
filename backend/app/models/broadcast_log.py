@@ -15,7 +15,7 @@ class BroadcastLog(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     bot_id: Mapped[int] = mapped_column(ForeignKey("bots.id", ondelete="SET NULL"), nullable=True)
 
-    status: Mapped[str] = mapped_column(String(16), nullable=False)  # ok | error
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
     error_text: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
     attempt: Mapped[int] = mapped_column(Integer, default=1, nullable=False)

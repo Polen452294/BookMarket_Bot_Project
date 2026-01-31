@@ -10,7 +10,6 @@ class Media(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
 
-    # "photo" | "video"
     type: Mapped[str] = mapped_column(String(16), nullable=False)
 
     url: Mapped[str] = mapped_column(String(1024), nullable=False)

@@ -3,7 +3,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
-import app.models  # подтягивает Product и User
+import app.models
 
 
 # Alembic Config object
@@ -13,9 +13,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Важно: импортируем Base и модели, чтобы autogenerate видел таблицы
 from app.core.db import Base  # noqa: E402
-import app.models  # noqa: F401,E402  (подтягивает Product через app/models/__init__.py)
+import app.models  # noqa: F401,E402
 
 target_metadata = Base.metadata
 

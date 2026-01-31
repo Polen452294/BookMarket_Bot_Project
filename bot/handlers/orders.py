@@ -84,7 +84,6 @@ async def finalize_order(message: Message, state: FSMContext, text: str, phone: 
     await message.answer("✅ Заявка отправлена! Скоро с тобой свяжутся.", reply_markup=None)
     await message.answer("Выбери раздел:", reply_markup=main_menu())
 
-    # уведомляем админов
     for admin_id in ADMIN_IDS:
         try:
             await message.bot.send_message(
@@ -99,7 +98,6 @@ async def finalize_order(message: Message, state: FSMContext, text: str, phone: 
             pass
 
 
-# --- админские кнопки статусов ---
 @router.callback_query(F.data.startswith("order:"))
 async def admin_order_action(cb: CallbackQuery):
     try:
@@ -122,15 +120,12 @@ async def admin_order_action(cb: CallbackQuery):
             return
 
     try:
-        # 1) меняем статус в бекенде
         await admin_set_order_status(order_id, status)
 
-        # 2) получаем tg_id пользователя для уведомления
         info = await admin_get_notify_info(order_id)
         tg_id = int(info["tg_id"])
         new_status = info["status"]
 
-        # 3) уведомляем пользователя
         user_text = STATUS_USER_TEXT.get(new_status, f"Статус изменён: {new_status}")
         try:
             await cb.bot.send_message(
@@ -140,10 +135,8 @@ async def admin_order_action(cb: CallbackQuery):
                 f"Если нужно уточнение — просто ответь на это сообщение.",
             )
         except Exception:
-            # пользователь мог заблокировать бота, это нормально
             pass
 
-        # 4) подтверждаем админу
         admin_label = STATUS_LABEL.get(new_status, new_status)
         await cb.answer("Готово")
         await cb.message.answer(f"✅ Заявка #{order_id} → {admin_label}")
@@ -196,7 +189,7 @@ async def my_orders(cb: CallbackQuery):
         )
         await cb.message.edit_text(
             "\n\n".join(lines),
-            reply_markup=my_order_kb(orders[0]["id"]),  # показываем для последней
+            reply_markup=my_order_kb(orders[0]["id"]),
             parse_mode="HTML",
         )
 
@@ -210,7 +203,6 @@ async def my_orders(cb: CallbackQuery):
             reply_markup=back_to_menu_kb(),
         )
     except Exception:
-        # если сообщение нельзя редактировать (редко, но бывает)
         await cb.message.answer(
             text,
             parse_mode="HTML",
@@ -264,14 +256,11 @@ async def reject_with_reason(cb: CallbackQuery):
     reason_text = REJECT_REASON_TEXT.get(code, "По внутренним причинам не можем взять заявку.")
 
     try:
-        # 1) поставить статус rejected
         await admin_set_order_status(order_id, "rejected")
 
-        # 2) взять tg_id пользователя
         info = await admin_get_notify_info(order_id)
         tg_id = int(info["tg_id"])
 
-        # 3) уведомить пользователя с причиной
         try:
             await cb.bot.send_message(
                 tg_id,
@@ -283,7 +272,6 @@ async def reject_with_reason(cb: CallbackQuery):
         except Exception:
             pass
 
-        # 4) вернуть админские кнопки обратно (или подтвердить)
         try:
             await cb.message.edit_reply_markup(reply_markup=admin_order_kb(order_id))
         except Exception:
@@ -317,7 +305,6 @@ async def reject_back(cb: CallbackQuery):
 
 @router.message(OrderFlow.phone, F.contact)
 async def order_phone_contact(message: Message, state: FSMContext):
-    #await message.answer("Спасибо! Контакт получил.", reply_markup=ReplyKeyboardRemove())
     data = await state.get_data()
     text = data["text"]
     phone = message.contact.phone_number if message.contact else None

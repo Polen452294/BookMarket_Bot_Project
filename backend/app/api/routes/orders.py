@@ -25,10 +25,6 @@ from app.schemas.order import (
 router = APIRouter(tags=["orders"])
 
 
-# ---------------------------
-# Helpers
-# ---------------------------
-
 ALLOWED_STATUSES = {"new", "in_progress", "closed", "rejected"}
 
 
@@ -57,10 +53,6 @@ def _content_range(resource: str, start: int, end: int, total: int) -> str:
     start = min(start, end)
     return f"{resource} {start}-{end}/{total}"
 
-
-# ---------------------------
-# Bot endpoints
-# ---------------------------
 
 @router.post("/bot/orders", response_model=OrderOut)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
@@ -114,10 +106,6 @@ def get_order(order_id: int, tg_id: int, db: Session = Depends(get_db)):
 
     return order
 
-
-# ---------------------------
-# Bot admin endpoints
-# ---------------------------
 
 @router.get(
     "/bot/admin/orders",
@@ -224,11 +212,6 @@ def cleanup_orders(
 
     db.commit()
     return {"deleted": count}
-
-
-# ---------------------------
-# Web admin endpoints (React-Admin) — JWT ONLY
-# ---------------------------
 
 @router.get("/admin/orders", response_model=list[OrderOut])
 def web_admin_orders(

@@ -15,7 +15,6 @@ export const authProvider: AuthProvider = {
     }
 
     const data = await res.json();
-    // backend должен вернуть { token: "..." }
     localStorage.setItem("admin_jwt", data.token);
   },
 

@@ -3,7 +3,6 @@ from aiogram.types import BotCommand, BotCommandScopeDefault, BotCommandScopeCha
 
 
 async def setup_commands(bot: Bot, admin_ids: list[int]):
-    # --- команды для всех пользователей ---
     await bot.set_my_commands(
         commands=[
             BotCommand(command="start", description="Открыть меню"),
@@ -12,7 +11,6 @@ async def setup_commands(bot: Bot, admin_ids: list[int]):
         scope=BotCommandScopeDefault(),
     )
 
-    # --- команды только для админов ---
     admin_commands = [
         BotCommand(command="admin", description="Админ-панель (заявки)"),
         BotCommand(command="stats", description="Статистика"),

@@ -48,17 +48,11 @@ def start_broadcast(broadcast_id: int, background: BackgroundTasks, db: Session 
     db.commit()
     db.refresh(bc)
 
-    # запускаем в фоне (отдельная сессия внутри)
     background.add_task(run_broadcast_job, broadcast_id)
     return bc
 
 
 async def run_broadcast_job(broadcast_id: int) -> None:
-    """
-    ВАЖНО: это MVP-фоновая задача.
-    Для прод-уровня лучше очередь (Celery/RQ/Arq), но для портфолио — ок.
-    """
-    # отдельная DB-сессия
     db: Session = SessionLocal()
     try:
         bc = db.get(Broadcast, broadcast_id)
@@ -96,21 +90,16 @@ async def run_broadcast_job(broadcast_id: int) -> None:
                 db.commit()
 
             except TelegramError as e:
-                # типовые реакции
                 err = str(e)
                 code = getattr(e, "code", None)
 
-                # user blocked / chat not found → помечаем пользователя
                 if code in (403, 400) and ("blocked" in err.lower() or "chat not found" in err.lower()):
                     u.is_blocked = True
 
-                # unauthorized → бот “умер”
                 if code == 401 or "unauthorized" in err.lower():
                     bot.is_active = False
-                    # обновляем список активных ботов
                     bots = db.scalars(select(Bot).where(Bot.is_active == True).order_by(Bot.id.asc())).all()
                     if not bots:
-                        # больше некем слать
                         db.add(BroadcastLog(
                             broadcast_id=bc.id,
                             user_id=u.id,
@@ -134,7 +123,6 @@ async def run_broadcast_job(broadcast_id: int) -> None:
                 ))
                 db.commit()
 
-            # анти-флуд: небольшая пауза
             await asyncio.sleep(0.05)
 
         bc.status = "done"

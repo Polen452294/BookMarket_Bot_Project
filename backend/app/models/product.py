@@ -1,12 +1,12 @@
-from sqlalchemy import String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy import Column, Integer, String, Text
 from app.core.db import Base
-
 
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    description = Column(Text)
+
+    author = Column(String)
+    price = Column(Integer) 

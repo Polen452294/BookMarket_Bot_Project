@@ -1,10 +1,18 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 
+from keyboards.main import main_menu, products_kb, back_to_menu_kb
+from services.api import get_products
+
 from api import upsert_user
-from keyboards import main_menu
+
+from keyboards.main import main_menu
+from keyboards.main import products_kb
+from services.api import get_products
 
 router = Router()
+
+print("products_kb from:", products_kb.__module__)
 
 HELP_TEXT = (
     "🧭 Помощь\n\n"
@@ -42,9 +50,42 @@ async def help_cmd(message: Message):
 
 @router.callback_query(F.data == "menu")
 async def menu(cb: CallbackQuery):
-    # стараемся не спамить: если можем — редактируем текущее сообщение
     try:
         await cb.message.edit_text("Выбери раздел:", reply_markup=main_menu())
     except Exception:
         await cb.message.answer("Выбери раздел:", reply_markup=main_menu())
+    await cb.answer()
+
+@router.callback_query(F.data == "catalog")
+async def show_catalog(cb: CallbackQuery):
+    products = await get_products()
+
+    if not products:
+        await cb.message.edit_text("Каталог пока пуст.", reply_markup=back_to_menu_kb())
+        await cb.answer()
+        return
+
+    await cb.message.edit_text(
+        "📦 Каталог:",
+        reply_markup=products_kb(products, with_back=True)
+    )
+    await cb.answer()
+
+@router.callback_query(F.data == "about")
+async def about(cb: CallbackQuery):
+    text = (
+        "ℹ️ <b>О проекте</b>\n\n"
+        "Это учебный проект-платформа:\n"
+        "• FastAPI + PostgreSQL (бекенд)\n"
+        "• aiogram (бот-клиент)\n"
+        "• Каталог товаров через API\n\n"
+        "Смысл: бот — тонкий клиент, вся логика в бекенде."
+    )
+
+    await cb.message.edit_text(text, reply_markup=back_to_menu_kb(), parse_mode="HTML")
+    await cb.answer()
+
+@router.callback_query(F.data == "menu")
+async def back_to_menu(cb: CallbackQuery):
+    await cb.message.edit_text("Главное меню:", reply_markup=main_menu())
     await cb.answer()

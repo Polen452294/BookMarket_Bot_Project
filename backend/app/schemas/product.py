@@ -14,7 +14,13 @@ class ProductUpdate(BaseModel):
 class ProductOut(BaseModel):
     id: int
     title: str
-    description: str | None = None
+    description: str
+    author: str | None
+    price: int | None
+
+    class Config:
+        from_attributes = True
+
 
     class Config:
         from_attributes = True

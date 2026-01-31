@@ -19,11 +19,9 @@ app = FastAPI(title="Bot Platform API")
 
 app.include_router(orders_router)
 app.include_router(auth_router)
-# Media static
 ensure_media_dir()
 app.mount("/media", StaticFiles(directory="storage"), name="media")
 
-# Routes
 app.include_router(health_router)
 app.include_router(auth_router)
 
@@ -39,7 +37,7 @@ app.include_router(broadcasts_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,  # важно: с "*" нельзя True
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Range"],

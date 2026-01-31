@@ -12,7 +12,6 @@ class Broadcast(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(String(4096), nullable=False)
 
-    # draft | sending | done
     status: Mapped[str] = mapped_column(String(16), default="draft", nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

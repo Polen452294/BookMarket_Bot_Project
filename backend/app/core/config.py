@@ -2,13 +2,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # ---- DB ----
     DATABASE_URL: str
 
-    # ---- storage/media ----
     MEDIA_DIR: str = "media"
 
-    # ---- web admin auth ----
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
     ADMIN_JWT_SECRET: str
@@ -31,7 +28,6 @@ class Settings(BaseSettings):
 
     @property
     def media_dir(self) -> str:
-        # код в storage.py читает settings.media_dir
         return self.MEDIA_DIR
 
 
